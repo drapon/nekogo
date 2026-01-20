@@ -16,6 +16,8 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,mp3,wav,webmanifest}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
       },
       manifest: {
         name: "ネコGo!",

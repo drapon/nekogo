@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 // ピクセルアート風SVGアイコン定義
 const Icons = {
@@ -204,6 +204,35 @@ const Icons = {
       <rect x="30" y="0" width="2" height="32" fill="#1B4B6B" />
     </svg>
   ),
+  // 動かせるブロック（木箱風）
+  pushable: (
+    <svg
+      viewBox="0 0 32 32"
+      className="w-10 h-10"
+      style={{ imageRendering: "pixelated" }}
+    >
+      {/* 木箱本体（茶色） */}
+      <rect x="2" y="2" width="28" height="28" fill="#8B5A2B" />
+      {/* ハイライト */}
+      <rect x="4" y="4" width="24" height="4" fill="#A67B4B" />
+      <rect x="4" y="4" width="4" height="24" fill="#A67B4B" />
+      {/* シャドウ */}
+      <rect x="24" y="8" width="4" height="20" fill="#6B4A1B" />
+      <rect x="8" y="24" width="20" height="4" fill="#6B4A1B" />
+      {/* 木目模様（横線） */}
+      <rect x="6" y="10" width="20" height="2" fill="#7B4A1B" />
+      <rect x="6" y="18" width="20" height="2" fill="#7B4A1B" />
+      {/* 矢印マーク（押せることを示す） */}
+      <rect x="13" y="12" width="6" height="2" fill="#FFD700" />
+      <rect x="14" y="14" width="4" height="2" fill="#FFD700" />
+      <rect x="15" y="16" width="2" height="2" fill="#FFD700" />
+      {/* 枠線 */}
+      <rect x="0" y="0" width="32" height="2" fill="#4B3A1B" />
+      <rect x="0" y="30" width="32" height="2" fill="#4B3A1B" />
+      <rect x="0" y="0" width="2" height="32" fill="#4B3A1B" />
+      <rect x="30" y="0" width="2" height="32" fill="#4B3A1B" />
+    </svg>
+  ),
   pickaxe: (
     <svg
       viewBox="0 0 32 32"
@@ -245,6 +274,49 @@ const Icons = {
       <rect x="2" y="26" width="28" height="2" fill="#333" />
       <rect x="2" y="8" width="2" height="20" fill="#333" />
       <rect x="28" y="8" width="2" height="20" fill="#333" />
+    </svg>
+  ),
+  soundOn: (
+    <svg
+      viewBox="0 0 32 32"
+      className="w-6 h-6"
+      style={{ imageRendering: "pixelated" }}
+    >
+      {/* スピーカー本体 */}
+      <rect x="4" y="10" width="6" height="12" fill="#333" />
+      <rect x="10" y="6" width="4" height="20" fill="#333" />
+      <rect x="14" y="4" width="2" height="24" fill="#333" />
+      {/* 音波 */}
+      <rect x="18" y="12" width="2" height="8" fill="#333" />
+      <rect x="22" y="8" width="2" height="16" fill="#333" />
+      <rect x="26" y="4" width="2" height="24" fill="#333" />
+    </svg>
+  ),
+  soundOff: (
+    <svg
+      viewBox="0 0 32 32"
+      className="w-6 h-6"
+      style={{ imageRendering: "pixelated" }}
+    >
+      {/* スピーカー本体 */}
+      <rect x="4" y="10" width="6" height="12" fill="#666" />
+      <rect x="10" y="6" width="4" height="20" fill="#666" />
+      <rect x="14" y="4" width="2" height="24" fill="#666" />
+      {/* 斜線（ミュート） */}
+      <rect
+        x="20"
+        y="6"
+        width="3"
+        height="22"
+        fill="#FF4444"
+        transform="rotate(45, 22, 16)"
+      />
+      <rect x="18" y="10" width="2" height="2" fill="#FF4444" />
+      <rect x="20" y="12" width="2" height="2" fill="#FF4444" />
+      <rect x="22" y="14" width="2" height="2" fill="#FF4444" />
+      <rect x="24" y="16" width="2" height="2" fill="#FF4444" />
+      <rect x="26" y="18" width="2" height="2" fill="#FF4444" />
+      <rect x="28" y="20" width="2" height="2" fill="#FF4444" />
     </svg>
   ),
 };
@@ -327,6 +399,13 @@ const PrintIcons = {
     <rect x="14" y="20" width="8" height="6" fill="#333"/>
     <rect x="24" y="20" width="4" height="6" fill="#333"/>
   </svg>`,
+  pushable: `<svg viewBox="0 0 32 32" width="32" height="32">
+    <rect x="2" y="2" width="28" height="28" fill="#fff" stroke="#000" stroke-width="2"/>
+    <line x1="6" y1="10" x2="26" y2="10" stroke="#000" stroke-width="1"/>
+    <line x1="6" y1="18" x2="26" y2="18" stroke="#000" stroke-width="1"/>
+    <polygon points="16,8 12,14 20,14" fill="#000"/>
+    <polygon points="16,24 12,18 20,18" fill="#000"/>
+  </svg>`,
 };
 
 // カメラの回転角度
@@ -347,6 +426,7 @@ const ELEMENTS = {
   BLOCK: "block",
   WANWAN: "wanwan",
   WALL: "wall",
+  PUSHABLE: "pushable",
 } as const;
 
 type ElementType = (typeof ELEMENTS)[keyof typeof ELEMENTS];
@@ -466,6 +546,8 @@ const Cell = ({
         return Icons.wanwan;
       case ELEMENTS.WALL:
         return Icons.wall;
+      case ELEMENTS.PUSHABLE:
+        return Icons.pushable;
       default:
         return null;
     }
@@ -590,6 +672,26 @@ const PaletteItem = ({
   </div>
 );
 
+// BGMトグルボタン
+interface BgmToggleProps {
+  isOn: boolean;
+  onToggle: () => void;
+}
+
+const BgmToggle = ({ isOn, onToggle }: BgmToggleProps) => (
+  <button
+    className={`fixed top-4 right-4 z-50 p-2 rounded-lg border-4 transition-all ${
+      isOn
+        ? "bg-yellow-400 border-yellow-600 hover:bg-yellow-300"
+        : "bg-gray-400 border-gray-600 hover:bg-gray-300"
+    }`}
+    onClick={onToggle}
+    title={isOn ? "BGM OFF" : "BGM ON"}
+  >
+    {isOn ? Icons.soundOn : Icons.soundOff}
+  </button>
+);
+
 const STORAGE_KEY = "puzzle_stages_v2";
 
 // ストレージヘルパー
@@ -652,6 +754,36 @@ export default function PuzzleGame() {
     "easy" | "medium" | "hard" | null
   >(null);
 
+  // BGM関連
+  const [isBgmOn, setIsBgmOn] = useState(false);
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const playBgmRef = useRef<HTMLAudioElement | null>(null);
+
+  // 効果音関連
+  const seFailRef = useRef<HTMLAudioElement | null>(null);
+  const seSuccessRef = useRef<HTMLAudioElement | null>(null);
+  const seSelectRef = useRef<HTMLAudioElement | null>(null);
+  const seMoveRef = useRef<HTMLAudioElement | null>(null);
+
+  // 効果音を再生する関数
+  const playSe = useCallback(
+    (type: "fail" | "success" | "select" | "move") => {
+      if (!isBgmOn) return;
+      const refs = {
+        fail: seFailRef,
+        success: seSuccessRef,
+        select: seSelectRef,
+        move: seMoveRef,
+      };
+      const audio = refs[type].current;
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+    },
+    [isBgmOn],
+  );
+
   // ストレージから読み込み
   useEffect(() => {
     const result = storage.get(STORAGE_KEY);
@@ -663,6 +795,55 @@ export default function PuzzleGame() {
       }
     }
   }, []);
+
+  // BGMと効果音の初期化
+  useEffect(() => {
+    bgmRef.current = new Audio("/bgm.mp3");
+    bgmRef.current.loop = true;
+    playBgmRef.current = new Audio("/play.mp3");
+    playBgmRef.current.loop = true;
+
+    // 効果音の初期化
+    seFailRef.current = new Audio("/fail.wav");
+    seSuccessRef.current = new Audio("/success.wav");
+    seSelectRef.current = new Audio("/select.wav");
+    seMoveRef.current = new Audio("/move.wav");
+
+    return () => {
+      bgmRef.current?.pause();
+      playBgmRef.current?.pause();
+    };
+  }, []);
+
+  // モードに応じたBGM切り替え
+  useEffect(() => {
+    const isPlayMode = mode === "testplay" || mode === "play";
+    const menuBgm = bgmRef.current;
+    const playBgm = playBgmRef.current;
+
+    if (!menuBgm || !playBgm) return;
+
+    // ゲームオーバーまたはクリア時はBGMを停止
+    if (isPlayMode && (gameState === "lost" || gameState === "won")) {
+      playBgm.pause();
+      return;
+    }
+
+    if (isBgmOn) {
+      if (isPlayMode) {
+        menuBgm.pause();
+        menuBgm.currentTime = 0;
+        playBgm.play().catch(() => {});
+      } else {
+        playBgm.pause();
+        playBgm.currentTime = 0;
+        menuBgm.play().catch(() => {});
+      }
+    } else {
+      menuBgm.pause();
+      playBgm.pause();
+    }
+  }, [mode, isBgmOn, gameState]);
 
   // ボード初期化（壁データ含む）
   const initBoard = useCallback((size: number): CellData[][] => {
@@ -726,6 +907,7 @@ export default function PuzzleGame() {
         blocks: 1,
         walls: 0,
         wanwan: 0,
+        pushable: 1,
         wallLines: 2,
         pickaxe: 2,
       },
@@ -735,6 +917,7 @@ export default function PuzzleGame() {
         blocks: 2,
         walls: 1,
         wanwan: 1,
+        pushable: 2,
         wallLines: 4,
         pickaxe: 2,
       },
@@ -744,6 +927,7 @@ export default function PuzzleGame() {
         blocks: 3,
         walls: 2,
         wanwan: 1,
+        pushable: 3,
         wallLines: 6,
         pickaxe: 3,
       },
@@ -824,6 +1008,18 @@ export default function PuzzleGame() {
       const pos = shuffledPositions[posIndex++];
       if (newBoard[pos.y][pos.x].element === ELEMENTS.EMPTY) {
         newBoard[pos.y][pos.x].element = ELEMENTS.WANWAN;
+      }
+    }
+
+    // 動かせるブロックを配置
+    for (
+      let i = 0;
+      i < config.pushable && posIndex < shuffledPositions.length;
+      i++
+    ) {
+      const pos = shuffledPositions[posIndex++];
+      if (newBoard[pos.y][pos.x].element === ELEMENTS.EMPTY) {
+        newBoard[pos.y][pos.x].element = ELEMENTS.PUSHABLE;
       }
     }
 
@@ -1019,7 +1215,8 @@ export default function PuzzleGame() {
               if (
                 cell.element === ELEMENTS.BLOCK ||
                 cell.element === ELEMENTS.WANWAN ||
-                cell.element === ELEMENTS.WALL
+                cell.element === ELEMENTS.WALL ||
+                cell.element === ELEMENTS.PUSHABLE
               ) {
                 break;
               }
@@ -1073,11 +1270,12 @@ export default function PuzzleGame() {
         // 壁（線）チェック
         if (hasWall(currentBoard, fromX, fromY, dir)) return false;
 
-        // 移動先のブロックチェック（WALL, BLOCKは通過不可）
+        // 移動先のブロックチェック（WALL, BLOCK, PUSHABLEは通過不可）
         const targetCell = currentBoard[toY][toX];
         if (
           targetCell.element === ELEMENTS.WALL ||
-          targetCell.element === ELEMENTS.BLOCK
+          targetCell.element === ELEMENTS.BLOCK ||
+          targetCell.element === ELEMENTS.PUSHABLE
         ) {
           return false;
         }
@@ -1234,6 +1432,92 @@ export default function PuzzleGame() {
         return;
       }
 
+      // 動かせるブロック（押す）
+      if (targetCell.element === ELEMENTS.PUSHABLE) {
+        // 押し先の座標を計算
+        const pushX = newX + dx;
+        const pushY = newY + dy;
+
+        // 押し先が範囲外なら押せない
+        if (
+          pushX < 0 ||
+          pushX >= playBoard[0].length ||
+          pushY < 0 ||
+          pushY >= playBoard.length
+        ) {
+          return;
+        }
+
+        // 押し先に壁（線）があれば押せない
+        if (hasWall(playBoard, newX, newY, dir)) {
+          return;
+        }
+
+        const pushTargetCell = playBoard[pushY][pushX];
+
+        // 押し先に障害物があれば押せない
+        const blockingElements = [
+          ELEMENTS.BLOCK,
+          ELEMENTS.WALL,
+          ELEMENTS.PUSHABLE,
+          ELEMENTS.CAMERA,
+          ELEMENTS.WANWAN,
+          ELEMENTS.GOAL,
+          ELEMENTS.ONIGIRI,
+        ];
+
+        if (blockingElements.includes(pushTargetCell.element)) {
+          return;
+        }
+
+        // ブロックを押す
+        const newBoard = playBoard.map((row) =>
+          row.map((cell) => ({ ...cell, walls: { ...cell.walls } })),
+        );
+
+        // PUSHABLEを移動先に配置
+        newBoard[pushY][pushX] = {
+          ...newBoard[pushY][pushX],
+          element: ELEMENTS.PUSHABLE,
+        };
+
+        // 元の位置を空に
+        newBoard[newY][newX] = {
+          ...newBoard[newY][newX],
+          element: ELEMENTS.EMPTY,
+        };
+
+        // 猫を移動
+        newBoard[catPosition.y][catPosition.x] = {
+          ...newBoard[catPosition.y][catPosition.x],
+          element: ELEMENTS.EMPTY,
+        };
+        newBoard[newY][newX] = {
+          ...newBoard[newY][newX],
+          element: ELEMENTS.CAT,
+        };
+
+        setPlayBoard(newBoard);
+        setCatPosition({ x: newX, y: newY });
+
+        // カメラ・ワンワンチェック
+        const highlights = getCameraHighlights(newBoard);
+        if (highlights.has(`${newX},${newY}`)) {
+          setGameState("lost");
+          setLossReason("camera");
+          playSe("fail");
+          return;
+        }
+
+        const wanwanAreas = getWanwanAreas(newBoard);
+        if (wanwanAreas.has(`${newX},${newY}`)) {
+          setGameState("lost");
+          setLossReason("wanwan");
+          playSe("fail");
+        }
+        return;
+      }
+
       const newBoard = playBoard.map((row) =>
         row.map((cell) => ({ ...cell, walls: { ...cell.walls } })),
       );
@@ -1260,6 +1544,7 @@ export default function PuzzleGame() {
             element: ELEMENTS.CAT,
           };
           setPlayBoard(newBoard);
+          playSe("success");
           return;
         }
       }
@@ -1273,6 +1558,7 @@ export default function PuzzleGame() {
       if (highlights.has(`${newX},${newY}`)) {
         setGameState("lost");
         setLossReason("camera");
+        playSe("fail");
         return;
       }
 
@@ -1281,6 +1567,7 @@ export default function PuzzleGame() {
       if (wanwanAreas.has(`${newX},${newY}`)) {
         setGameState("lost");
         setLossReason("wanwan");
+        playSe("fail");
       }
     },
     [
@@ -1295,6 +1582,7 @@ export default function PuzzleGame() {
       getWanwanAreas,
       startTime,
       hasWall,
+      playSe,
     ],
   );
 
@@ -1424,15 +1712,19 @@ export default function PuzzleGame() {
   };
 
   // 印刷機能
-  const handlePrint = () => {
+  const handlePrint = (stage?: Stage) => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
       alert("ポップアップがブロックされました。許可してください。");
       return;
     }
 
-    const cellSize = 40;
-    const boardHtml = board
+    const targetBoard = stage?.board ?? board;
+    const targetPickaxeCount = stage?.pickaxeCount ?? pickaxeCount;
+    const targetRequiredOnigiri = stage?.requiredOnigiri ?? requiredOnigiri;
+
+    const cellSize = 60;
+    const boardHtml = targetBoard
       .map(
         (row, y) =>
           `<tr>${row
@@ -1451,6 +1743,8 @@ export default function PuzzleGame() {
                 content = PrintIcons.wanwan;
               else if (cell.element === ELEMENTS.WALL)
                 content = PrintIcons.wall;
+              else if (cell.element === ELEMENTS.PUSHABLE)
+                content = PrintIcons.pushable;
 
               const borderTop = cell.walls.top
                 ? "3px solid black"
@@ -1498,7 +1792,7 @@ export default function PuzzleGame() {
       <body>
         <h1>ネコパズル</h1>
         <div class="info">
-          <p>おにぎり: ${requiredOnigiri}個 ｜ つるはし: ${pickaxeCount}本</p>
+          <p>おにぎり: ${targetRequiredOnigiri}個 ｜ つるはし: ${targetPickaxeCount}本</p>
         </div>
         <table>${boardHtml}</table>
         <div class="legend">
@@ -1509,6 +1803,7 @@ export default function PuzzleGame() {
           <div class="legend-item">${PrintIcons.block} こわせるブロック</div>
           <div class="legend-item">${PrintIcons.wall} こわれない壁</div>
           <div class="legend-item">${PrintIcons.wanwan} ワンワン（周囲に近づけない）</div>
+          <div class="legend-item">${PrintIcons.pushable} 動かせるブロック（押せる）</div>
           <div class="legend-item"><span style="border:3px solid black;width:20px;height:20px;display:inline-block;"></span> 壁（通れない）</div>
         </div>
         <div class="rules">
@@ -1517,13 +1812,15 @@ export default function PuzzleGame() {
             <li>ネコを上下左右に動かしてゴールを目指します</li>
             <li>おにぎりをすべて集めてからゴールしてください</li>
             <li>カメラの監視範囲（レンズの方向の直線）に入るとアウト！</li>
-            <li>つるはしでこわせるブロックを壊せます（${pickaxeCount}回まで）</li>
+            <li>つるはしでこわせるブロックを壊せます（${targetPickaxeCount}回まで）</li>
             <li>ワンワンの周囲1マスには近づけません</li>
+            <li>動かせるブロックは押して動かせます</li>
             <li>太い黒線の壁は通り抜けられません</li>
           </ul>
         </div>
         <div style="text-align:center;margin-top:20px;">
-          <button onclick="window.print()" style="padding:10px 20px;font-size:16px;cursor:pointer;">印刷する</button>
+          <button onclick="window.close()" style="padding:10px 20px;font-size:16px;cursor:pointer;margin-right:10px;background:#ccc;border:1px solid #999;border-radius:4px;">戻る</button>
+          <button onclick="window.print()" style="padding:10px 20px;font-size:16px;cursor:pointer;background:#4CAF50;color:white;border:1px solid #388E3C;border-radius:4px;">印刷する</button>
         </div>
       </body>
       </html>
@@ -1547,6 +1844,7 @@ export default function PuzzleGame() {
   if (mode === "menu") {
     return (
       <div className="min-h-screen bg-green-500 p-4">
+        <BgmToggle isOn={isBgmOn} onToggle={() => setIsBgmOn(!isBgmOn)} />
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <div className="flex justify-center items-center gap-4 mb-2">
@@ -1564,14 +1862,20 @@ export default function PuzzleGame() {
           <div className="space-y-4">
             <button
               className="w-full py-4 bg-yellow-400 text-gray-900 rounded-lg text-xl font-bold hover:bg-yellow-300 transition shadow-lg border-4 border-yellow-600"
-              onClick={() => setMode("setup")}
+              onClick={() => {
+                playSe("select");
+                setMode("setup");
+              }}
             >
               ✏️ ステージを作る
             </button>
 
             <button
               className="w-full py-4 bg-blue-400 text-white rounded-lg text-xl font-bold hover:bg-blue-300 transition shadow-lg border-4 border-blue-600"
-              onClick={() => setMode("browse")}
+              onClick={() => {
+                playSe("select");
+                setMode("browse");
+              }}
             >
               🎮 ステージを遊ぶ
             </button>
@@ -1601,6 +1905,10 @@ export default function PuzzleGame() {
                 <span>ワンワンの周りは通れない！</span>
               </div>
               <div className="flex items-center gap-2">
+                <div className="w-6 h-6 flex-shrink-0">{Icons.pushable}</div>
+                <span>木箱は押して動かせる！</span>
+              </div>
+              <div className="flex items-center gap-2">
                 <div className="w-6 h-6 flex-shrink-0">{Icons.wall}</div>
                 <span>こわれないかべは通り抜けられない！</span>
               </div>
@@ -1615,6 +1923,7 @@ export default function PuzzleGame() {
   if (mode === "setup") {
     return (
       <div className="min-h-screen bg-green-500 p-4">
+        <BgmToggle isOn={isBgmOn} onToggle={() => setIsBgmOn(!isBgmOn)} />
         <div className="max-w-md mx-auto">
           <h2
             className="text-2xl font-bold text-center mb-6 text-white"
@@ -1647,19 +1956,28 @@ export default function PuzzleGame() {
             <div className="flex gap-2">
               <button
                 className="flex-1 py-2 bg-blue-300 text-gray-900 rounded-lg font-bold hover:bg-blue-200 border-2 border-blue-500"
-                onClick={() => generateRandomStage("easy")}
+                onClick={() => {
+                  playSe("select");
+                  generateRandomStage("easy");
+                }}
               >
                 かんたん
               </button>
               <button
                 className="flex-1 py-2 bg-yellow-300 text-gray-900 rounded-lg font-bold hover:bg-yellow-200 border-2 border-yellow-500"
-                onClick={() => generateRandomStage("medium")}
+                onClick={() => {
+                  playSe("select");
+                  generateRandomStage("medium");
+                }}
               >
                 ふつう
               </button>
               <button
                 className="flex-1 py-2 bg-red-300 text-gray-900 rounded-lg font-bold hover:bg-red-200 border-2 border-red-500"
-                onClick={() => generateRandomStage("hard")}
+                onClick={() => {
+                  playSe("select");
+                  generateRandomStage("hard");
+                }}
               >
                 むずかしい
               </button>
@@ -1669,13 +1987,19 @@ export default function PuzzleGame() {
           <div className="flex gap-4">
             <button
               className="flex-1 py-3 bg-gray-400 text-gray-900 rounded-lg font-bold hover:bg-gray-300 border-4 border-gray-600"
-              onClick={() => setMode("menu")}
+              onClick={() => {
+                playSe("select");
+                setMode("menu");
+              }}
             >
               戻る
             </button>
             <button
               className="flex-1 py-3 bg-yellow-400 text-gray-900 rounded-lg font-bold hover:bg-yellow-300 border-4 border-yellow-600"
-              onClick={startCreate}
+              onClick={() => {
+                playSe("select");
+                startCreate();
+              }}
             >
               白紙から作成
             </button>
@@ -1689,6 +2013,7 @@ export default function PuzzleGame() {
   if (mode === "browse") {
     return (
       <div className="min-h-screen bg-green-500 p-4">
+        <BgmToggle isOn={isBgmOn} onToggle={() => setIsBgmOn(!isBgmOn)} />
         <div className="max-w-md mx-auto">
           <h2
             className="text-2xl font-bold text-center mb-6 text-white"
@@ -1713,12 +2038,23 @@ export default function PuzzleGame() {
                         {stage.gridSize}x{stage.gridSize}
                       </p>
                     </div>
-                    <button
-                      className="px-4 py-2 bg-blue-400 text-white rounded hover:bg-blue-300 border-2 border-blue-600 font-bold"
-                      onClick={() => loadStage(stage)}
-                    >
-                      プレイ
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-3 py-2 bg-white text-gray-900 rounded hover:bg-gray-100 border-2 border-gray-400 font-bold text-sm"
+                        onClick={() => handlePrint(stage)}
+                      >
+                        🖨️
+                      </button>
+                      <button
+                        className="px-4 py-2 bg-blue-400 text-white rounded hover:bg-blue-300 border-2 border-blue-600 font-bold"
+                        onClick={() => {
+                          playSe("select");
+                          loadStage(stage);
+                        }}
+                      >
+                        プレイ
+                      </button>
+                    </div>
                   </div>
                   {stage.records.length > 0 && (
                     <div className="mt-2 text-sm">
@@ -1735,7 +2071,10 @@ export default function PuzzleGame() {
 
           <button
             className="w-full mt-6 py-3 bg-gray-400 text-gray-900 rounded-lg font-bold hover:bg-gray-300 border-4 border-gray-600"
-            onClick={() => setMode("menu")}
+            onClick={() => {
+              playSe("select");
+              setMode("menu");
+            }}
           >
             戻る
           </button>
@@ -1748,6 +2087,7 @@ export default function PuzzleGame() {
   if (mode === "create") {
     return (
       <div className="min-h-screen bg-green-500 p-2">
+        <BgmToggle isOn={isBgmOn} onToggle={() => setIsBgmOn(!isBgmOn)} />
         <div className="max-w-2xl mx-auto">
           <h2
             className="text-xl font-bold text-center mb-2 text-white"
@@ -1832,6 +2172,12 @@ export default function PuzzleGame() {
                 icon={Icons.wanwan}
                 selected={selectedTool === ELEMENTS.WANWAN}
                 onClick={() => setSelectedTool(ELEMENTS.WANWAN)}
+              />
+              <PaletteItem
+                label="動かせる"
+                icon={Icons.pushable}
+                selected={selectedTool === ELEMENTS.PUSHABLE}
+                onClick={() => setSelectedTool(ELEMENTS.PUSHABLE)}
               />
             </div>
 
@@ -1938,32 +2284,41 @@ export default function PuzzleGame() {
           <div className="flex gap-2 flex-wrap justify-center">
             <button
               className="px-4 py-2 bg-gray-400 text-gray-900 rounded hover:bg-gray-300 font-bold border-2 border-gray-600"
-              onClick={() => setMode("menu")}
+              onClick={() => {
+                playSe("select");
+                setMode("menu");
+              }}
             >
               戻る
             </button>
             <button
               className="px-4 py-2 bg-yellow-400 text-gray-900 rounded hover:bg-yellow-300 font-bold border-2 border-yellow-600"
-              onClick={startTestPlay}
+              onClick={() => {
+                playSe("select");
+                startTestPlay();
+              }}
             >
               テストプレイ
-            </button>
-            <button
-              className="px-4 py-2 bg-white text-gray-900 rounded hover:bg-gray-100 font-bold border-2 border-gray-400"
-              onClick={handlePrint}
-            >
-              🖨️ 印刷
             </button>
             {lastDifficulty && (
               <button
                 className="px-4 py-2 bg-purple-400 text-white rounded hover:bg-purple-300 font-bold border-2 border-purple-600"
-                onClick={() => generateRandomStage(lastDifficulty)}
+                onClick={() => {
+                  playSe("select");
+                  generateRandomStage(lastDifficulty);
+                }}
               >
                 🎲 再生成
               </button>
             )}
             {hasCleared && (
               <>
+                <button
+                  className="px-4 py-2 bg-white text-gray-900 rounded hover:bg-gray-100 font-bold border-2 border-gray-400"
+                  onClick={() => handlePrint()}
+                >
+                  🖨️ 印刷
+                </button>
                 <input
                   type="text"
                   placeholder="ステージ名"
@@ -1973,7 +2328,10 @@ export default function PuzzleGame() {
                 />
                 <button
                   className="px-4 py-2 bg-blue-400 text-white rounded hover:bg-blue-300 font-bold border-2 border-blue-600"
-                  onClick={saveStage}
+                  onClick={() => {
+                    playSe("select");
+                    saveStage();
+                  }}
                 >
                   保存
                 </button>
@@ -1995,6 +2353,7 @@ export default function PuzzleGame() {
   if (mode === "testplay" || mode === "play") {
     return (
       <div className="min-h-screen bg-green-500 p-2">
+        <BgmToggle isOn={isBgmOn} onToggle={() => setIsBgmOn(!isBgmOn)} />
         <div className="max-w-2xl mx-auto">
           <h2
             className="text-xl font-bold text-center mb-2 text-white"
@@ -2086,13 +2445,17 @@ export default function PuzzleGame() {
           <div className="flex gap-2 justify-center mb-4">
             <button
               className="px-4 py-2 bg-gray-400 text-gray-900 rounded hover:bg-gray-300 font-bold border-2 border-gray-600"
-              onClick={() => setMode(mode === "testplay" ? "create" : "browse")}
+              onClick={() => {
+                playSe("select");
+                setMode(mode === "testplay" ? "create" : "browse");
+              }}
             >
               戻る
             </button>
             <button
               className="px-4 py-2 bg-blue-400 text-white rounded hover:bg-blue-300 font-bold border-2 border-blue-600"
               onClick={() => {
+                playSe("select");
                 if (mode === "testplay") {
                   startTestPlay();
                 } else {
@@ -2105,6 +2468,19 @@ export default function PuzzleGame() {
             >
               リトライ
             </button>
+            {mode === "play" && (
+              <button
+                className="px-4 py-2 bg-white text-gray-900 rounded hover:bg-gray-100 font-bold border-2 border-gray-400"
+                onClick={() => {
+                  const stage = savedStages.find(
+                    (s) => s.id === currentStageId,
+                  );
+                  if (stage) handlePrint(stage);
+                }}
+              >
+                🖨️ 印刷
+              </button>
+            )}
           </div>
 
           {/* タッチ操作ボタン */}
