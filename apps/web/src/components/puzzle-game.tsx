@@ -255,6 +255,81 @@ const Icons = {
       <rect x="26" y="8" width="2" height="4" fill="#7B7B8B" />
     </svg>
   ),
+  // 鍵
+  key: (
+    <svg
+      viewBox="0 0 32 32"
+      className="w-10 h-10"
+      style={{ imageRendering: "pixelated" }}
+    >
+      {/* 鍵の頭（円形） */}
+      <rect x="6" y="4" width="12" height="12" fill="#FFD700" />
+      <rect x="8" y="2" width="8" height="2" fill="#FFD700" />
+      <rect x="8" y="16" width="8" height="2" fill="#FFD700" />
+      <rect x="4" y="6" width="2" height="8" fill="#FFD700" />
+      <rect x="18" y="6" width="2" height="8" fill="#FFD700" />
+      {/* 穴 */}
+      <rect x="10" y="8" width="4" height="4" fill="#8B6914" />
+      {/* 軸 */}
+      <rect x="14" y="14" width="4" height="14" fill="#FFD700" />
+      {/* 歯 */}
+      <rect x="18" y="20" width="4" height="4" fill="#FFD700" />
+      <rect x="18" y="26" width="6" height="4" fill="#FFD700" />
+      {/* ハイライト */}
+      <rect x="8" y="4" width="4" height="2" fill="#FFF8DC" />
+      <rect x="6" y="6" width="2" height="4" fill="#FFF8DC" />
+    </svg>
+  ),
+  // ドア
+  door: (
+    <svg
+      viewBox="0 0 32 32"
+      className="w-10 h-10"
+      style={{ imageRendering: "pixelated" }}
+    >
+      {/* ドア枠 */}
+      <rect x="4" y="2" width="24" height="28" fill="#8B4513" />
+      {/* ドア本体 */}
+      <rect x="6" y="4" width="20" height="24" fill="#A0522D" />
+      {/* パネル上 */}
+      <rect x="8" y="6" width="16" height="8" fill="#8B4513" />
+      <rect x="10" y="8" width="12" height="4" fill="#CD853F" />
+      {/* パネル下 */}
+      <rect x="8" y="16" width="16" height="10" fill="#8B4513" />
+      <rect x="10" y="18" width="12" height="6" fill="#CD853F" />
+      {/* ドアノブ */}
+      <rect x="20" y="14" width="4" height="4" fill="#FFD700" />
+      <rect x="21" y="15" width="2" height="2" fill="#FFF8DC" />
+      {/* 鍵穴 */}
+      <rect x="21" y="19" width="2" height="3" fill="#333" />
+    </svg>
+  ),
+  // テレポート（色付き版）
+  teleport: (color: string) => (
+    <svg
+      viewBox="0 0 32 32"
+      className="w-10 h-10"
+      style={{ imageRendering: "pixelated" }}
+    >
+      {/* 外側の円 */}
+      <rect x="8" y="2" width="16" height="4" fill={color} />
+      <rect x="4" y="6" width="4" height="4" fill={color} />
+      <rect x="24" y="6" width="4" height="4" fill={color} />
+      <rect x="2" y="10" width="4" height="12" fill={color} />
+      <rect x="26" y="10" width="4" height="12" fill={color} />
+      <rect x="4" y="22" width="4" height="4" fill={color} />
+      <rect x="24" y="22" width="4" height="4" fill={color} />
+      <rect x="8" y="26" width="16" height="4" fill={color} />
+      {/* 内側（渦巻き風） */}
+      <rect x="10" y="8" width="12" height="2" fill={color} opacity="0.7" />
+      <rect x="18" y="10" width="4" height="4" fill={color} opacity="0.7" />
+      <rect x="10" y="14" width="12" height="2" fill={color} opacity="0.5" />
+      <rect x="10" y="16" width="4" height="4" fill={color} opacity="0.7" />
+      <rect x="10" y="20" width="12" height="2" fill={color} opacity="0.5" />
+      {/* 中心 */}
+      <rect x="14" y="14" width="4" height="4" fill="#fff" />
+    </svg>
+  ),
   eraser: (
     <svg
       viewBox="0 0 32 32"
@@ -406,6 +481,29 @@ const PrintIcons = {
     <polygon points="16,8 12,14 20,14" fill="#000"/>
     <polygon points="16,24 12,18 20,18" fill="#000"/>
   </svg>`,
+  key: `<svg viewBox="0 0 32 32" width="32" height="32">
+    <circle cx="12" cy="10" r="7" fill="#fff" stroke="#000" stroke-width="2"/>
+    <circle cx="12" cy="10" r="3" fill="#000"/>
+    <rect x="14" y="14" width="4" height="14" fill="#000"/>
+    <rect x="18" y="20" width="4" height="4" fill="#000"/>
+    <rect x="18" y="26" width="6" height="4" fill="#000"/>
+  </svg>`,
+  door: `<svg viewBox="0 0 32 32" width="32" height="32">
+    <rect x="4" y="2" width="24" height="28" fill="#fff" stroke="#000" stroke-width="2"/>
+    <rect x="8" y="6" width="16" height="8" stroke="#000" stroke-width="1" fill="none"/>
+    <rect x="8" y="16" width="16" height="10" stroke="#000" stroke-width="1" fill="none"/>
+    <circle cx="22" cy="16" r="2" fill="#000"/>
+    <rect x="21" y="19" width="2" height="3" fill="#000"/>
+  </svg>`,
+  teleport: (id: number) => {
+    const circledNumbers = ["①", "②", "③", "④", "⑤"];
+    const num = circledNumbers[id - 1] || `${id}`;
+    return `<svg viewBox="0 0 32 32" width="32" height="32">
+      <circle cx="16" cy="16" r="12" fill="#fff" stroke="#000" stroke-width="2"/>
+      <circle cx="16" cy="16" r="8" fill="none" stroke="#000" stroke-width="1"/>
+      <text x="16" y="21" text-anchor="middle" font-size="14" font-weight="bold" fill="#000">${num}</text>
+    </svg>`;
+  },
 };
 
 // カメラの回転角度
@@ -414,6 +512,15 @@ const CAMERA_ROTATIONS: Record<string, number> = {
   right: 90,
   down: 180,
   left: 270,
+};
+
+// テレポートの色
+const TELEPORT_COLORS: Record<number, string> = {
+  1: "#FF4444", // 赤
+  2: "#4444FF", // 青
+  3: "#44BB44", // 緑
+  4: "#FFBB00", // 黄
+  5: "#AA44AA", // 紫
 };
 
 // ゲーム要素の定義
@@ -427,6 +534,9 @@ const ELEMENTS = {
   WANWAN: "wanwan",
   WALL: "wall",
   PUSHABLE: "pushable",
+  KEY: "key",
+  DOOR: "door",
+  TELEPORT: "teleport",
 } as const;
 
 type ElementType = (typeof ELEMENTS)[keyof typeof ELEMENTS];
@@ -444,6 +554,7 @@ interface CellData {
   element: ElementType;
   direction: Direction;
   walls: Walls;
+  teleportId?: number;
 }
 
 interface Stage {
@@ -504,6 +615,7 @@ interface CellProps {
   element: ElementType;
   direction: Direction;
   walls: Walls;
+  teleportId?: number;
   isHighlighted?: boolean;
   onClick?: () => void;
   onWallClick?: (side: WallSide) => void;
@@ -515,6 +627,7 @@ const Cell = ({
   element,
   direction,
   walls,
+  teleportId,
   isHighlighted,
   onClick,
   onWallClick,
@@ -548,6 +661,14 @@ const Cell = ({
         return Icons.wall;
       case ELEMENTS.PUSHABLE:
         return Icons.pushable;
+      case ELEMENTS.KEY:
+        return Icons.key;
+      case ELEMENTS.DOOR:
+        return Icons.door;
+      case ELEMENTS.TELEPORT:
+        return Icons.teleport(
+          TELEPORT_COLORS[teleportId || 1] || TELEPORT_COLORS[1],
+        );
       default:
         return null;
     }
@@ -724,6 +845,7 @@ export default function PuzzleGame() {
     ELEMENTS.CAT,
   );
   const [cameraDirection, setCameraDirection] = useState<Direction>("up");
+  const [currentTeleportId, setCurrentTeleportId] = useState(1);
   const [pickaxeCount, setPickaxeCount] = useState(3);
   const [totalOnigiri, setTotalOnigiri] = useState(0);
   const [requiredOnigiri, setRequiredOnigiri] = useState(0);
@@ -734,7 +856,12 @@ export default function PuzzleGame() {
     y: number;
   } | null>(null);
   const [collectedOnigiri, setCollectedOnigiri] = useState(0);
+  const [collectedKeys, setCollectedKeys] = useState(0);
   const [remainingPickaxe, setRemainingPickaxe] = useState(0);
+  const [lastTeleportPos, setLastTeleportPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [gameState, setGameState] = useState<"playing" | "won" | "lost">(
     "playing",
   );
@@ -1108,6 +1235,41 @@ export default function PuzzleGame() {
           direction: "up",
         };
       }
+    } else if (selectedTool === ELEMENTS.TELEPORT) {
+      // テレポートは同じIDかどうかで判定
+      if (
+        currentCell.element === ELEMENTS.TELEPORT &&
+        currentCell.teleportId === currentTeleportId
+      ) {
+        newBoard[y][x] = {
+          ...currentCell,
+          element: ELEMENTS.EMPTY,
+          direction: "up",
+          teleportId: undefined,
+        };
+      } else {
+        newBoard[y][x] = {
+          ...currentCell,
+          element: ELEMENTS.TELEPORT,
+          direction: "up",
+          teleportId: currentTeleportId,
+        };
+        // 同じIDのテレポートが2つ配置されたら次のIDに自動切り替え
+        let sameIdCount = 0;
+        for (const row of newBoard) {
+          for (const cell of row) {
+            if (
+              cell.element === ELEMENTS.TELEPORT &&
+              cell.teleportId === currentTeleportId
+            ) {
+              sameIdCount++;
+            }
+          }
+        }
+        if (sameIdCount >= 2 && currentTeleportId < 5) {
+          setCurrentTeleportId(currentTeleportId + 1);
+        }
+      }
     } else {
       if (currentCell.element === selectedTool) {
         newBoard[y][x] = {
@@ -1363,7 +1525,9 @@ export default function PuzzleGame() {
     setPlayBoard(newPlayBoard);
     setCatPosition(catPos);
     setCollectedOnigiri(0);
+    setCollectedKeys(0);
     setRemainingPickaxe(pickaxeCount);
+    setLastTeleportPos(null);
     setGameState("playing");
     setLossReason(null);
     setStartTime(Date.now());
@@ -1416,6 +1580,22 @@ export default function PuzzleGame() {
       // 壁ブロック（通れない）
       if (targetCell.element === ELEMENTS.WALL) return;
 
+      // ドア（鍵があれば開く）
+      if (targetCell.element === ELEMENTS.DOOR) {
+        if (collectedKeys > 0) {
+          setCollectedKeys((prev) => prev - 1);
+          const newBoard = playBoard.map((row) =>
+            row.map((cell) => ({ ...cell, walls: { ...cell.walls } })),
+          );
+          newBoard[newY][newX] = {
+            ...newBoard[newY][newX],
+            element: ELEMENTS.EMPTY,
+          };
+          setPlayBoard(newBoard);
+        }
+        return;
+      }
+
       // こわせるブロック（つるはしで壊す）
       if (targetCell.element === ELEMENTS.BLOCK) {
         if (remainingPickaxe > 0) {
@@ -1456,7 +1636,7 @@ export default function PuzzleGame() {
         const pushTargetCell = playBoard[pushY][pushX];
 
         // 押し先に障害物があれば押せない
-        const blockingElements = [
+        const blockingElements: ElementType[] = [
           ELEMENTS.BLOCK,
           ELEMENTS.WALL,
           ELEMENTS.PUSHABLE,
@@ -1464,6 +1644,9 @@ export default function PuzzleGame() {
           ELEMENTS.WANWAN,
           ELEMENTS.GOAL,
           ELEMENTS.ONIGIRI,
+          ELEMENTS.KEY,
+          ELEMENTS.DOOR,
+          ELEMENTS.TELEPORT,
         ];
 
         if (blockingElements.includes(pushTargetCell.element)) {
@@ -1487,10 +1670,11 @@ export default function PuzzleGame() {
           element: ELEMENTS.EMPTY,
         };
 
-        // 猫を移動
+        // 猫を移動（テレポート上にいた場合は復元）
+        const prevCell = newBoard[catPosition.y][catPosition.x];
         newBoard[catPosition.y][catPosition.x] = {
-          ...newBoard[catPosition.y][catPosition.x],
-          element: ELEMENTS.EMPTY,
+          ...prevCell,
+          element: prevCell.teleportId ? ELEMENTS.TELEPORT : ELEMENTS.EMPTY,
         };
         newBoard[newY][newX] = {
           ...newBoard[newY][newX],
@@ -1522,15 +1706,22 @@ export default function PuzzleGame() {
         row.map((cell) => ({ ...cell, walls: { ...cell.walls } })),
       );
 
+      // 猫の元の位置を処理（テレポート上にいた場合は復元）
+      const prevCatCell = newBoard[catPosition.y][catPosition.x];
       newBoard[catPosition.y][catPosition.x] = {
-        ...newBoard[catPosition.y][catPosition.x],
-        element: ELEMENTS.EMPTY,
+        ...prevCatCell,
+        element: prevCatCell.teleportId ? ELEMENTS.TELEPORT : ELEMENTS.EMPTY,
       };
 
       let newCollected = collectedOnigiri;
       if (targetCell.element === ELEMENTS.ONIGIRI) {
         newCollected++;
         setCollectedOnigiri(newCollected);
+      }
+
+      // 鍵を収集
+      if (targetCell.element === ELEMENTS.KEY) {
+        setCollectedKeys((prev) => prev + 1);
       }
 
       if (targetCell.element === ELEMENTS.GOAL) {
@@ -1568,6 +1759,84 @@ export default function PuzzleGame() {
         setGameState("lost");
         setLossReason("wanwan");
         playSe("fail");
+        return;
+      }
+
+      // テレポートの処理
+      if (
+        targetCell.element === ELEMENTS.TELEPORT &&
+        targetCell.teleportId &&
+        !(lastTeleportPos?.x === newX && lastTeleportPos?.y === newY)
+      ) {
+        // ペアとなるテレポートを探す
+        let pairedTeleport: { x: number; y: number } | null = null;
+        for (let py = 0; py < newBoard.length; py++) {
+          for (let px = 0; px < newBoard[py].length; px++) {
+            if (px === newX && py === newY) continue;
+            const cell = newBoard[py][px];
+            if (
+              cell.element === ELEMENTS.TELEPORT &&
+              cell.teleportId === targetCell.teleportId
+            ) {
+              pairedTeleport = { x: px, y: py };
+              break;
+            }
+          }
+          if (pairedTeleport) break;
+        }
+
+        if (pairedTeleport) {
+          // まず入口テレポートに猫を表示
+          newBoard[newY][newX] = {
+            ...newBoard[newY][newX],
+            element: ELEMENTS.CAT,
+          };
+          setPlayBoard([...newBoard.map((row) => [...row])]);
+          setCatPosition({ x: newX, y: newY });
+
+          // 少し遅延してからワープ
+          const warpDelay = 150;
+          setTimeout(() => {
+            // 入口テレポートを復元
+            newBoard[newY][newX] = {
+              ...newBoard[newY][newX],
+              element: ELEMENTS.TELEPORT,
+              teleportId: targetCell.teleportId,
+            };
+            // 出口テレポートに猫を移動
+            newBoard[pairedTeleport.y][pairedTeleport.x] = {
+              ...newBoard[pairedTeleport.y][pairedTeleport.x],
+              element: ELEMENTS.CAT,
+            };
+            setPlayBoard([...newBoard.map((row) => [...row])]);
+            setCatPosition({ x: pairedTeleport.x, y: pairedTeleport.y });
+            setLastTeleportPos({ x: pairedTeleport.x, y: pairedTeleport.y });
+
+            // テレポート先でのカメラ・ワンワンチェック
+            const teleportHighlights = getCameraHighlights(newBoard);
+            if (
+              teleportHighlights.has(`${pairedTeleport.x},${pairedTeleport.y}`)
+            ) {
+              setGameState("lost");
+              setLossReason("camera");
+              playSe("fail");
+              return;
+            }
+            const teleportWanwanAreas = getWanwanAreas(newBoard);
+            if (
+              teleportWanwanAreas.has(`${pairedTeleport.x},${pairedTeleport.y}`)
+            ) {
+              setGameState("lost");
+              setLossReason("wanwan");
+              playSe("fail");
+              return;
+            }
+          }, warpDelay);
+          return;
+        }
+      } else if (targetCell.element !== ELEMENTS.TELEPORT) {
+        // テレポート以外のセルに移動した場合、lastTeleportPosをクリア
+        setLastTeleportPos(null);
       }
     },
     [
@@ -1577,7 +1846,9 @@ export default function PuzzleGame() {
       playBoard,
       remainingPickaxe,
       collectedOnigiri,
+      collectedKeys,
       requiredOnigiri,
+      lastTeleportPos,
       getCameraHighlights,
       getWanwanAreas,
       startTime,
@@ -1661,7 +1932,9 @@ export default function PuzzleGame() {
     );
     setCatPosition(catPos);
     setCollectedOnigiri(0);
+    setCollectedKeys(0);
     setRemainingPickaxe(stage.pickaxeCount);
+    setLastTeleportPos(null);
     setGameState("playing");
     setLossReason(null);
     setStartTime(Date.now());
@@ -1745,6 +2018,11 @@ export default function PuzzleGame() {
                 content = PrintIcons.wall;
               else if (cell.element === ELEMENTS.PUSHABLE)
                 content = PrintIcons.pushable;
+              else if (cell.element === ELEMENTS.KEY) content = PrintIcons.key;
+              else if (cell.element === ELEMENTS.DOOR)
+                content = PrintIcons.door;
+              else if (cell.element === ELEMENTS.TELEPORT)
+                content = PrintIcons.teleport(cell.teleportId || 1);
 
               const borderTop = cell.walls.top
                 ? "3px solid black"
@@ -1804,6 +2082,9 @@ export default function PuzzleGame() {
           <div class="legend-item">${PrintIcons.wall} こわれない壁</div>
           <div class="legend-item">${PrintIcons.wanwan} ワンワン（周囲に近づけない）</div>
           <div class="legend-item">${PrintIcons.pushable} 動かせるブロック（押せる）</div>
+          <div class="legend-item">${PrintIcons.key} 鍵（ドアを開ける）</div>
+          <div class="legend-item">${PrintIcons.door} ドア（鍵で開く）</div>
+          <div class="legend-item">${PrintIcons.teleport(1)} テレポート（同じ番号同士でワープ）</div>
           <div class="legend-item"><span style="border:3px solid black;width:20px;height:20px;display:inline-block;"></span> 壁（通れない）</div>
         </div>
         <div class="rules">
@@ -1815,6 +2096,8 @@ export default function PuzzleGame() {
             <li>つるはしでこわせるブロックを壊せます（${targetPickaxeCount}回まで）</li>
             <li>ワンワンの周囲1マスには近づけません</li>
             <li>動かせるブロックは押して動かせます</li>
+            <li>鍵を取るとドアを開けられます（鍵1つでドア1つ）</li>
+            <li>テレポートに乗ると同じ番号のテレポートにワープします</li>
             <li>太い黒線の壁は通り抜けられません</li>
           </ul>
         </div>
@@ -1911,6 +2194,16 @@ export default function PuzzleGame() {
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 flex-shrink-0">{Icons.wall}</div>
                 <span>こわれないかべは通り抜けられない！</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 flex-shrink-0">{Icons.key}</div>
+                <span>鍵を取るとドアを開けられる！</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 flex-shrink-0">
+                  {Icons.teleport(TELEPORT_COLORS[1])}
+                </div>
+                <span>テレポートでワープ！</span>
               </div>
             </div>
           </div>
@@ -2179,6 +2472,47 @@ export default function PuzzleGame() {
                 selected={selectedTool === ELEMENTS.PUSHABLE}
                 onClick={() => setSelectedTool(ELEMENTS.PUSHABLE)}
               />
+              <PaletteItem
+                label="鍵"
+                icon={Icons.key}
+                selected={selectedTool === ELEMENTS.KEY}
+                onClick={() => setSelectedTool(ELEMENTS.KEY)}
+              />
+              <PaletteItem
+                label="ドア"
+                icon={Icons.door}
+                selected={selectedTool === ELEMENTS.DOOR}
+                onClick={() => setSelectedTool(ELEMENTS.DOOR)}
+              />
+              <PaletteItem
+                label="テレポート"
+                icon={Icons.teleport(TELEPORT_COLORS[currentTeleportId])}
+                selected={selectedTool === ELEMENTS.TELEPORT}
+                onClick={() => setSelectedTool(ELEMENTS.TELEPORT)}
+                extra={
+                  <div className="flex gap-1 mt-1">
+                    {[1, 2, 3, 4, 5].map((id) => (
+                      <button
+                        key={id}
+                        className={`text-xs px-1.5 py-0.5 rounded font-bold ${currentTeleportId === id ? "bg-yellow-400 text-gray-900" : "bg-green-300 text-gray-700"}`}
+                        style={{
+                          backgroundColor:
+                            currentTeleportId === id
+                              ? TELEPORT_COLORS[id]
+                              : undefined,
+                          color: currentTeleportId === id ? "#fff" : undefined,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentTeleportId(id);
+                        }}
+                      >
+                        {id}
+                      </button>
+                    ))}
+                  </div>
+                }
+              />
             </div>
 
             {/* つるはし設定 */}
@@ -2229,6 +2563,7 @@ export default function PuzzleGame() {
                         element={cell.element}
                         direction={cell.direction}
                         walls={cell.walls}
+                        teleportId={cell.teleportId}
                         isWanwanArea={
                           wanwanAreas.has(`${x},${y}`) &&
                           cell.element !== ELEMENTS.WANWAN
@@ -2380,6 +2715,10 @@ export default function PuzzleGame() {
               <div className="w-8 h-8">{Icons.pickaxe}</div>
               <p className="font-bold text-gray-900">{remainingPickaxe}</p>
             </div>
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8">{Icons.key}</div>
+              <p className="font-bold text-gray-900">{collectedKeys}</p>
+            </div>
           </div>
 
           {/* ゲーム状態メッセージ */}
@@ -2428,6 +2767,7 @@ export default function PuzzleGame() {
                         element={cell.element}
                         direction={cell.direction}
                         walls={cell.walls}
+                        teleportId={cell.teleportId}
                         isHighlighted={cameraHighlights.has(`${x},${y}`)}
                         isWanwanArea={
                           wanwanAreas.has(`${x},${y}`) &&
