@@ -610,6 +610,15 @@ const WALL_FROM_DIR: Record<Direction, WallSide> = {
 	right: "right",
 };
 
+// グリッドサイズに応じたセルサイズを計算
+const getCellSize = (gridSize: number): number => {
+	// スマホ画面幅を考慮してセルサイズを調整
+	if (gridSize >= 8) return 40; // 8x8: 320px
+	if (gridSize >= 7) return 44; // 7x7: 308px
+	if (gridSize >= 6) return 48; // 6x6: 288px
+	return 56; // 5x5以下: 280px
+};
+
 // セルコンポーネント
 interface CellProps {
 	element: ElementType;
@@ -621,6 +630,7 @@ interface CellProps {
 	onWallClick?: (side: WallSide) => void;
 	isWanwanArea?: boolean;
 	isEditing?: boolean;
+	cellSize?: number;
 }
 
 const Cell = ({
@@ -633,14 +643,16 @@ const Cell = ({
 	onWallClick,
 	isWanwanArea,
 	isEditing,
+	cellSize = 56,
 }: CellProps) => {
 	const baseClasses =
-		"w-14 h-14 flex items-center justify-center cursor-pointer transition-all relative box-border";
+		"flex items-center justify-center cursor-pointer transition-all relative box-border";
 	const bgClass = isHighlighted
 		? "bg-red-400"
 		: isWanwanArea
 			? "bg-orange-300"
 			: "bg-green-400 hover:bg-green-300";
+	const iconSize = Math.max(24, cellSize - 16); // アイコンサイズも調整
 
 	// アイコンをレンダリング
 	const renderIcon = () => {
@@ -679,6 +691,8 @@ const Cell = ({
 			className={`${baseClasses} ${bgClass}`}
 			onClick={onClick}
 			style={{
+				width: cellSize,
+				height: cellSize,
 				borderTop: "2px solid #2a7a2a",
 				borderLeft: "2px solid #2a7a2a",
 			}}
@@ -756,7 +770,12 @@ const Cell = ({
 			)}
 
 			{/* セル内容 */}
-			<div className="z-0">{renderIcon()}</div>
+			<div
+				className="z-0 [&>svg]:h-full [&>svg]:w-full"
+				style={{ width: iconSize, height: iconSize }}
+			>
+				{renderIcon()}
+			</div>
 		</div>
 	);
 };
@@ -778,7 +797,7 @@ const PaletteItem = ({
 	icon,
 }: PaletteItemProps) => (
 	<div
-		className={`flex min-w-16 cursor-pointer flex-col items-center rounded p-2 ${
+		className={`flex min-w-16 shrink-0 cursor-pointer flex-col items-center rounded p-2 ${
 			selected
 				? "border-2 border-green-800 bg-green-500"
 				: "border-2 border-green-700 bg-green-400 hover:bg-green-300"
@@ -988,6 +1007,43 @@ export default function PuzzleGame() {
 		}
 		return newBoard;
 	}, []);
+
+	// ボードリサイズ（既存のデータを保持）
+	const resizeBoard = useCallback(
+		(newSize: number) => {
+			const currentSize = board.length;
+			if (newSize === currentSize) return;
+
+			const newBoard: CellData[][] = [];
+			for (let y = 0; y < newSize; y++) {
+				const row: CellData[] = [];
+				for (let x = 0; x < newSize; x++) {
+					if (y < currentSize && x < currentSize) {
+						// 既存のセルをコピー
+						const existingCell = board[y][x];
+						row.push({
+							...existingCell,
+							walls: { ...existingCell.walls },
+						});
+					} else {
+						// 新しいセルは空で初期化
+						row.push({
+							element: ELEMENTS.EMPTY,
+							direction: "up",
+							walls: { top: false, right: false, bottom: false, left: false },
+						});
+					}
+				}
+				newBoard.push(row);
+			}
+
+			setBoard(newBoard);
+			setGridSize(newSize);
+			updateOnigiriCount(newBoard);
+			setHasCleared(false); // 編集したらクリアフラグをリセット
+		},
+		[board],
+	);
 
 	// 新規作成開始
 	const startCreate = () => {
@@ -1288,6 +1344,7 @@ export default function PuzzleGame() {
 
 		setBoard(newBoard);
 		updateOnigiriCount(newBoard);
+		setHasCleared(false); // 編集したらクリアフラグをリセット
 	};
 
 	// 壁クリック
@@ -1311,6 +1368,7 @@ export default function PuzzleGame() {
 		}
 
 		setBoard(newBoard);
+		setHasCleared(false); // 編集したらクリアフラグをリセット
 	};
 
 	// おにぎり数を更新
@@ -2391,7 +2449,7 @@ export default function PuzzleGame() {
 
 					{/* パレット */}
 					<div className="mb-2 rounded-lg border-4 border-green-800 bg-green-600 p-2 shadow">
-						<div className="flex flex-wrap justify-center gap-2">
+						<div className="flex gap-2 overflow-x-auto pb-2">
 							<PaletteItem
 								label="消しゴム"
 								icon={Icons.eraser}
@@ -2515,29 +2573,6 @@ export default function PuzzleGame() {
 							/>
 						</div>
 
-						{/* つるはし設定 */}
-						<div className="mt-2 flex items-center justify-center gap-4 border-green-700 border-t pt-2">
-							<div className="flex items-center gap-2 text-white">
-								{Icons.pickaxe}
-								<span>つるはし:</span>
-							</div>
-							<button
-								className="rounded bg-green-400 px-2 py-1 font-bold text-gray-900 hover:bg-green-300"
-								onClick={() => setPickaxeCount(Math.max(0, pickaxeCount - 1))}
-							>
-								-
-							</button>
-							<span className="w-6 text-center font-bold text-white">
-								{pickaxeCount}
-							</span>
-							<button
-								className="rounded bg-green-400 px-2 py-1 font-bold text-gray-900 hover:bg-green-300"
-								onClick={() => setPickaxeCount(pickaxeCount + 1)}
-							>
-								+
-							</button>
-						</div>
-
 						{selectedTool === "wallLine" && (
 							<p className="mt-2 text-center text-sm text-yellow-300">
 								💡 セルの端（上下左右）をクリックして壁を配置/削除
@@ -2571,6 +2606,7 @@ export default function PuzzleGame() {
 												onClick={() => handleCellClick(x, y)}
 												onWallClick={(side) => handleWallClick(x, y, side)}
 												isEditing={selectedTool === "wallLine"}
+												cellSize={getCellSize(gridSize)}
 											/>
 										))}
 									</div>
@@ -2580,26 +2616,26 @@ export default function PuzzleGame() {
 					</div>
 
 					{/* 情報 */}
-					<div className="mb-2 flex flex-wrap items-center justify-center gap-4 text-center text-sm text-white">
+					<div className="mb-2 flex flex-wrap items-center justify-center gap-3 text-center text-white">
 						<div className="flex items-center gap-1">
 							<div className="h-6 w-6">{Icons.onigiri}</div>
 							<span>配置: {totalOnigiri}</span>
 						</div>
-						<div className="flex items-center gap-1">
+						<div className="flex items-center gap-2">
 							<span>必要:</span>
 							<button
-								className="rounded bg-green-400 px-2 py-0.5 font-bold text-gray-900 text-xs hover:bg-green-300"
+								className="min-w-9 rounded bg-green-400 px-3 py-1.5 font-bold text-gray-900 text-lg hover:bg-green-300 active:bg-green-500"
 								onClick={() =>
 									setRequiredOnigiri(Math.max(0, requiredOnigiri - 1))
 								}
 							>
 								-
 							</button>
-							<span className="w-4 text-center font-bold">
+							<span className="w-5 text-center font-bold text-lg">
 								{requiredOnigiri}
 							</span>
 							<button
-								className="rounded bg-green-400 px-2 py-0.5 font-bold text-gray-900 text-xs hover:bg-green-300"
+								className="min-w-9 rounded bg-green-400 px-3 py-1.5 font-bold text-gray-900 text-lg hover:bg-green-300 active:bg-green-500"
 								onClick={() =>
 									setRequiredOnigiri(
 										Math.min(totalOnigiri, requiredOnigiri + 1),
@@ -2609,9 +2645,43 @@ export default function PuzzleGame() {
 								+
 							</button>
 						</div>
-						<div className="flex items-center gap-1">
+						<div className="flex items-center gap-2">
 							<div className="h-6 w-6">{Icons.pickaxe}</div>
-							<span>つるはし: {pickaxeCount}</span>
+							<button
+								className="min-w-9 rounded bg-green-400 px-3 py-1.5 font-bold text-gray-900 text-lg hover:bg-green-300 active:bg-green-500"
+								onClick={() => setPickaxeCount(Math.max(0, pickaxeCount - 1))}
+							>
+								-
+							</button>
+							<span className="w-5 text-center font-bold text-lg">
+								{pickaxeCount}
+							</span>
+							<button
+								className="min-w-9 rounded bg-green-400 px-3 py-1.5 font-bold text-gray-900 text-lg hover:bg-green-300 active:bg-green-500"
+								onClick={() => setPickaxeCount(pickaxeCount + 1)}
+							>
+								+
+							</button>
+						</div>
+						<div className="flex items-center gap-2">
+							<span>サイズ:</span>
+							<button
+								className="min-w-9 rounded bg-green-400 px-3 py-1.5 font-bold text-gray-900 text-lg hover:bg-green-300 active:bg-green-500 disabled:opacity-50"
+								onClick={() => resizeBoard(gridSize - 1)}
+								disabled={gridSize <= 4}
+							>
+								-
+							</button>
+							<span className="w-12 text-center font-bold text-lg">
+								{gridSize}x{gridSize}
+							</span>
+							<button
+								className="min-w-9 rounded bg-green-400 px-3 py-1.5 font-bold text-gray-900 text-lg hover:bg-green-300 active:bg-green-500 disabled:opacity-50"
+								onClick={() => resizeBoard(gridSize + 1)}
+								disabled={gridSize >= 8}
+							>
+								+
+							</button>
 						</div>
 					</div>
 
@@ -2773,6 +2843,7 @@ export default function PuzzleGame() {
 													wanwanAreas.has(`${x},${y}`) &&
 													cell.element !== ELEMENTS.WANWAN
 												}
+												cellSize={getCellSize(gridSize)}
 											/>
 										))}
 									</div>
