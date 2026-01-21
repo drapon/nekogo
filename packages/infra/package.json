@@ -1,19 +1,19 @@
 {
-  "name": "@nekogo-temp/infra",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "alchemy dev",
-    "deploy": "alchemy deploy",
-    "destroy": "alchemy destroy"
-  },
-  "dependencies": {
-    "dotenv": "catalog:",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@nekogo-temp/config": "workspace:*",
-    "alchemy": "catalog:",
-    "typescript": "catalog:"
-  }
+	"name": "@nekogo-temp/infra",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "alchemy dev",
+		"deploy": "alchemy deploy",
+		"destroy": "alchemy destroy"
+	},
+	"dependencies": {
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@nekogo-temp/config": "workspace:*",
+		"alchemy": "catalog:",
+		"typescript": "catalog:"
+	}
 }
