@@ -12,13 +12,10 @@ const db = await D1Database("database", {
 	migrationsDir: "../../packages/db/src/migrations",
 });
 
-export const web = await Vite("web", {
-	cwd: "../../apps/web",
-	assets: "dist",
-	bindings: {
-		VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-	},
-});
+// 開発モードかどうかを判定（alchemy dev コマンドで実行時）
+const isDev =
+	process.env.ALCHEMY_PHASE === "dev" ||
+	process.argv.some((arg) => arg.includes("dev"));
 
 export const server = await Worker("server", {
 	cwd: "../../apps/server",
@@ -26,10 +23,18 @@ export const server = await Worker("server", {
 	compatibility: "node",
 	bindings: {
 		DB: db,
-		CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+		CORS_ORIGIN: isDev ? "http://localhost:3001" : alchemy.env.CORS_ORIGIN!,
 	},
 	dev: {
 		port: 3000,
+	},
+});
+
+export const web = await Vite("web", {
+	cwd: "../../apps/web",
+	assets: "dist",
+	bindings: {
+		VITE_SERVER_URL: server.url,
 	},
 });
 

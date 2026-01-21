@@ -1,4 +1,7 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { client, orpc } from "../utils/orpc";
 
 // ピクセルアート風SVGアイコン定義
 const Icons = {
@@ -832,10 +835,11 @@ const BgmToggle = ({ isOn, onToggle }: BgmToggleProps) => (
 	</button>
 );
 
+// localStorage (移行用)
 const STORAGE_KEY = "puzzle_stages_v2";
+const MIGRATION_KEY = "puzzle_stages_migrated";
 
-// ストレージヘルパー
-const storage = {
+const localStorage_ = {
 	get: (key: string): string | null => {
 		try {
 			return localStorage.getItem(key);
@@ -892,13 +896,47 @@ export default function PuzzleGame() {
 	const [elapsedTime, setElapsedTime] = useState(0);
 	const [hasCleared, setHasCleared] = useState(false);
 
-	// 保存されたステージ
-	const [savedStages, setSavedStages] = useState<Stage[]>([]);
+	// 保存されたステージ (D1から取得)
+	const queryClient = useQueryClient();
+	const { data: savedStages = [] } = useQuery(orpc.stages.list.queryOptions());
 	const [currentStageId, setCurrentStageId] = useState<string | null>(null);
 	const [stageName, setStageName] = useState("");
 	const [lastDifficulty, setLastDifficulty] = useState<
 		"easy" | "medium" | "hard" | null
 	>(null);
+
+	// クエリキー（oRPCのキー形式に合わせる）
+	const stagesListKey = orpc.stages.list.queryOptions().queryKey;
+
+	// ステージ保存mutation
+	const createStageMutation = useMutation({
+		mutationFn: (stage: Stage) => client.stages.create(stage),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: stagesListKey });
+		},
+	});
+
+	// 記録保存mutation
+	const addRecordMutation = useMutation({
+		mutationFn: (data: {
+			stageId: string;
+			playerName: string;
+			time: number;
+			date: string;
+		}) => client.stages.addRecord(data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: stagesListKey });
+		},
+	});
+
+	// localStorage移行mutation
+	const bulkImportMutation = useMutation({
+		mutationFn: (stages: Stage[]) => client.stages.bulkImport(stages),
+		onSuccess: () => {
+			localStorage_.set(MIGRATION_KEY, "true");
+			queryClient.invalidateQueries({ queryKey: stagesListKey });
+		},
+	});
 
 	// BGM関連
 	const [isBgmOn, setIsBgmOn] = useState(false);
@@ -930,17 +968,29 @@ export default function PuzzleGame() {
 		[isBgmOn],
 	);
 
-	// ストレージから読み込み
+	// localStorage → D1 移行
 	useEffect(() => {
-		const result = storage.get(STORAGE_KEY);
-		if (result) {
-			try {
-				setSavedStages(JSON.parse(result));
-			} catch {
-				console.log("Failed to parse saved stages");
-			}
+		const migrated = localStorage_.get(MIGRATION_KEY);
+		if (migrated) return;
+
+		const localStages = localStorage_.get(STORAGE_KEY);
+		if (!localStages) {
+			localStorage_.set(MIGRATION_KEY, "true");
+			return;
 		}
-	}, []);
+
+		try {
+			const stages = JSON.parse(localStages) as Stage[];
+			if (stages.length > 0) {
+				bulkImportMutation.mutate(stages);
+			} else {
+				localStorage_.set(MIGRATION_KEY, "true");
+			}
+		} catch {
+			console.log("Failed to migrate local stages");
+			localStorage_.set(MIGRATION_KEY, "true");
+		}
+	}, [bulkImportMutation]);
 
 	// BGMと効果音の初期化
 	useEffect(() => {
@@ -1796,6 +1846,8 @@ export default function PuzzleGame() {
 					playSe("success");
 					return;
 				}
+				// おにぎりが足りないのでゴールには入れない
+				return;
 			}
 
 			newBoard[newY][newX] = { ...newBoard[newY][newX], element: ELEMENTS.CAT };
@@ -1929,7 +1981,7 @@ export default function PuzzleGame() {
 	}, [movePlayer]);
 
 	// ステージ保存
-	const saveStage = () => {
+	const saveStage = async () => {
 		if (!stageName.trim()) {
 			alert("ステージ名を入力してください");
 			return;
@@ -1946,13 +1998,11 @@ export default function PuzzleGame() {
 			records: [],
 		};
 
-		const newStages = [...savedStages, stage];
-		setSavedStages(newStages);
-
-		if (storage.set(STORAGE_KEY, JSON.stringify(newStages))) {
+		try {
+			await createStageMutation.mutateAsync(stage);
 			alert("ステージを保存しました！");
 			setMode("menu");
-		} else {
+		} catch {
 			alert("保存に失敗しました");
 		}
 	};
@@ -2001,34 +2051,19 @@ export default function PuzzleGame() {
 	};
 
 	// 記録保存
-	const saveRecord = () => {
+	const saveRecord = async () => {
 		const playerName = prompt("名前を入力してください");
-		if (!playerName) return;
+		if (!playerName || !currentStageId) return;
 
-		const newStages = savedStages.map((stage) => {
-			if (stage.id === currentStageId) {
-				return {
-					...stage,
-					records: [
-						...stage.records,
-						{
-							name: playerName,
-							time: elapsedTime,
-							date: new Date().toISOString(),
-						},
-					]
-						.sort((a, b) => a.time - b.time)
-						.slice(0, 10),
-				};
-			}
-			return stage;
-		});
-
-		setSavedStages(newStages);
-
-		if (storage.set(STORAGE_KEY, JSON.stringify(newStages))) {
+		try {
+			await addRecordMutation.mutateAsync({
+				stageId: currentStageId,
+				playerName,
+				time: elapsedTime,
+				date: new Date().toISOString(),
+			});
 			alert("記録を保存しました！");
-		} else {
+		} catch {
 			alert("保存に失敗しました");
 		}
 	};
