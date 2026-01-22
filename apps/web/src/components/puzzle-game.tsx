@@ -1897,6 +1897,14 @@ export default function PuzzleGame() {
     return paths;
   }, []);
 
+  // ネズミが通れないブロック系要素
+  const BLOCKING_ELEMENTS = [
+    ELEMENTS.BLOCK,
+    ELEMENTS.WALL,
+    ELEMENTS.PUSHABLE,
+    ELEMENTS.DOOR,
+  ];
+
   // ネズミを移動させる（プレイヤーの移動後に呼ばれる）
   const moveMice = useCallback(
     (
@@ -1912,6 +1920,7 @@ export default function PuzzleGame() {
       >,
       traps: Set<string>,
       paths: Map<number, { x: number; y: number }[]>,
+      currentBoard: CellData[][],
     ) => {
       const newPositions = new Map<
         number,
@@ -1923,6 +1932,16 @@ export default function PuzzleGame() {
           stopped: boolean;
         }
       >();
+
+      // 指定位置がブロック系要素かチェック
+      const isBlocked = (x: number, y: number): boolean => {
+        if (y < 0 || y >= currentBoard.length) return true;
+        if (x < 0 || x >= currentBoard[y].length) return true;
+        const cell = currentBoard[y][x];
+        return BLOCKING_ELEMENTS.includes(
+          cell.element as (typeof BLOCKING_ELEMENTS)[number],
+        );
+      };
 
       for (const [mouseId, pos] of currentPositions) {
         if (pos.stopped) {
@@ -1953,6 +1972,43 @@ export default function PuzzleGame() {
         // 新しい位置
         const nextPos = path[nextIndex];
         if (nextPos) {
+          // ブロック系要素がある場合は方向反転して反対に移動
+          if (isBlocked(nextPos.x, nextPos.y)) {
+            // 方向を反転して1つ戻る
+            newDirection = (pos.direction * -1) as 1 | -1;
+            nextIndex = pos.pathIndex + newDirection;
+
+            // 境界チェック
+            if (nextIndex < 0) {
+              nextIndex = 1;
+              newDirection = 1;
+            } else if (nextIndex >= path.length) {
+              nextIndex = path.length - 2;
+              newDirection = -1;
+            }
+
+            const reversePos = path[nextIndex];
+            if (reversePos && !isBlocked(reversePos.x, reversePos.y)) {
+              const trapKey = `${reversePos.x},${reversePos.y}`;
+              const isStopped = traps.has(trapKey);
+
+              newPositions.set(mouseId, {
+                x: reversePos.x,
+                y: reversePos.y,
+                pathIndex: nextIndex,
+                direction: newDirection,
+                stopped: isStopped,
+              });
+            } else {
+              // 両方向がブロックの場合はその場に留まる
+              newPositions.set(mouseId, {
+                ...pos,
+                direction: newDirection,
+              });
+            }
+            continue;
+          }
+
           const trapKey = `${nextPos.x},${nextPos.y}`;
           const isStopped = traps.has(trapKey);
 
@@ -2239,7 +2295,12 @@ export default function PuzzleGame() {
         }
 
         // ネズミを移動させる（ブロック押し後）
-        const movedMice = moveMice(mousePositions, placedTraps, mousePathsMap);
+        const movedMice = moveMice(
+          mousePositions,
+          placedTraps,
+          mousePathsMap,
+          newBoard,
+        );
         setMousePositions(movedMice);
 
         // ネズミとの衝突チェック
@@ -2314,7 +2375,12 @@ export default function PuzzleGame() {
       }
 
       // ネズミを移動させる
-      const movedMice = moveMice(mousePositions, placedTraps, mousePathsMap);
+      const movedMice = moveMice(
+        mousePositions,
+        placedTraps,
+        mousePathsMap,
+        newBoard,
+      );
       setMousePositions(movedMice);
 
       // ネズミとの衝突チェック
@@ -2401,6 +2467,7 @@ export default function PuzzleGame() {
                 currentPositions,
                 placedTraps,
                 mousePathsMap,
+                newBoard,
               );
               // テレポート先でネズミと衝突チェック
               if (
