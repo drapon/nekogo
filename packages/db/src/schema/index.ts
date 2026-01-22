@@ -7,6 +7,7 @@ export const stages = sqliteTable("stages", {
 	gridSize: integer("grid_size").notNull(),
 	board: text("board").notNull(), // CellData[][] as JSON string
 	pickaxeCount: integer("pickaxe_count").notNull().default(3),
+	mouseTrapCount: integer("mouse_trap_count").notNull().default(0),
 	requiredOnigiri: integer("required_onigiri").notNull().default(0),
 	createdAt: text("created_at").notNull(),
 });

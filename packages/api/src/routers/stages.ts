@@ -18,6 +18,8 @@ const cellDataSchema = z.object({
 	direction: z.enum(["up", "right", "down", "left"]),
 	walls: wallsSchema,
 	teleportId: z.number().optional(),
+	mouseId: z.number().optional(),
+	mousePath: z.array(z.object({ x: z.number(), y: z.number() })).optional(),
 });
 
 const createStageSchema = z.object({
@@ -26,6 +28,7 @@ const createStageSchema = z.object({
 	gridSize: z.number().min(4).max(8),
 	board: z.array(z.array(cellDataSchema)),
 	pickaxeCount: z.number().min(0).max(10),
+	mouseTrapCount: z.number().min(0).max(10),
 	requiredOnigiri: z.number().min(0),
 	createdAt: z.string(),
 	records: z.array(z.any()).optional(), // フロントエンドから送られてくるが無視
@@ -105,6 +108,7 @@ export const stagesRouter = {
 				gridSize: input.gridSize,
 				board: JSON.stringify(input.board),
 				pickaxeCount: input.pickaxeCount,
+				mouseTrapCount: input.mouseTrapCount,
 				requiredOnigiri: input.requiredOnigiri,
 				createdAt: input.createdAt,
 			});
@@ -153,6 +157,7 @@ export const stagesRouter = {
 					gridSize: stage.gridSize,
 					board: JSON.stringify(stage.board),
 					pickaxeCount: stage.pickaxeCount,
+					mouseTrapCount: stage.mouseTrapCount ?? 0,
 					requiredOnigiri: stage.requiredOnigiri,
 					createdAt: stage.createdAt,
 				});
