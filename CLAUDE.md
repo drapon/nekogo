@@ -61,3 +61,22 @@ packages/
 - `apps/web/.env`: `VITE_SERVER_URL`
 - `apps/server/.env`: `CORS_ORIGIN`, `DB` (D1 binding)
 - Validated via `packages/env/src/web.ts` and `packages/env/src/server.ts`
+
+## Database Migration (重要)
+
+**スキーマ変更時は必ず本番D1にマイグレーションを適用すること！**
+
+`packages/db/src/schema/index.ts` を変更した場合：
+
+```bash
+# 1. マイグレーションファイル生成
+bun run db:generate
+
+# 2. 本番D1に適用
+bunx wrangler d1 execute nekogo-temp-database-hayashi --remote --file packages/db/src/migrations/<生成されたファイル>.sql
+
+# 3. マイグレーションファイルをコミット
+git add packages/db/src/migrations/
+```
+
+詳細は `/db-migrate` コマンドを参照。
