@@ -1,0 +1,1 @@
+ALTER TABLE `stages` ADD `mouse_trap_count` integer DEFAULT 0 NOT NULL;

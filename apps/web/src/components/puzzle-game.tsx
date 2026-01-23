@@ -2251,6 +2251,11 @@ export default function PuzzleGame() {
           row.map((cell) => ({ ...cell, walls: { ...cell.walls } })),
         );
 
+        // ネズミの移動判定用にブロック押し前のボード状態を保存
+        const boardBeforePush = newBoard.map((row) =>
+          row.map((cell) => ({ ...cell })),
+        );
+
         // PUSHABLEを移動先に配置
         newBoard[pushY][pushX] = {
           ...newBoard[pushY][pushX],
@@ -2294,12 +2299,12 @@ export default function PuzzleGame() {
           return;
         }
 
-        // ネズミを移動させる（ブロック押し後）
+        // ネズミを移動させる（ブロック押し前のボード状態で判定）
         const movedMice = moveMice(
           mousePositions,
           placedTraps,
           mousePathsMap,
-          newBoard,
+          boardBeforePush,
         );
         setMousePositions(movedMice);
 
